@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "contracts/zero_day_futures",
+    "engine",
+    "offchain/matcher_api",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0"
+authors = ["Zero Day Futures Team"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

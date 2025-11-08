@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zero Day Futures Demo</title>
+    <style>
+      body { font-family: system-ui, Arial, sans-serif; margin: 20px; }
+      .row { margin-bottom: 12px; }
+      input, select, button { padding: 6px; }
+      #log { height: 240px; overflow: auto; border: 1px solid #ddd; padding: 8px; }
+      .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      h2 { margin-top: 24px; }
+    </style>
+  </head>
+  <body>
+    <h1>Zero Day Futures Demo</h1>
+
+    <div class="grid">
+      <div>
+        <h2>Place Order</h2>
+        <div class="row"><label>Trader </label><input id="trader" value="Alice" /></div>
+        <div class="row"><label>Side </label><select id="side"><option>buy</option><option>sell</option></select></div>
+        <div class="row"><label>Price </label><input id="price" type="number" value="100" /></div>
+        <div class="row"><label>Qty </label><input id="qty" type="number" value="1000" /></div>
+        <div class="row"><label>Leverage </label><input id="lev" type="number" value="10" /></div>
+        <div class="row"><label>TTL (s)</label><input id="ttl" type="number" value="86400" /></div>
+        <div class="row"><label>Limit </label><input id="is_limit" type="checkbox" checked /></div>
+        <div class="row"><button id="place">Place</button></div>
+      </div>
+      <div>
+        <h2>Oracle & Liquidation</h2>
+        <div class="row"><label>Mark Price </label><input id="mark" type="number" value="100" /></div>
+        <div class="row"><button id="simulate_liq">Simulate Liquidation Loop (mock)</button></div>
+      </div>
+    </div>
+
+    <h2>Matches</h2>
+    <div id="log"></div>
+
+    <script>
+      const log = (m) => { const el = document.getElementById('log'); el.innerText += `\n${m}`; el.scrollTop = el.scrollHeight; };
+
+      document.getElementById('place').onclick = async () => {
+        const payload = {
+          trader: document.getElementById('trader').value,
+          side: document.getElementById('side').value,
+          price: Number(document.getElementById('price').value),
+          qty: Number(document.getElementById('qty').value),
+          leverage: Number(document.getElementById('lev').value),
+          ttl_secs: Number(document.getElementById('ttl').value),
+          is_limit: document.getElementById('is_limit').checked
+        };
+        const res = await fetch('/orders', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+        const json = await res.json();
+        log('Order placed id=' + json.id);
+      };
+
+      document.getElementById('simulate_liq').onclick = () => {
+        const ws = new WebSocket(`ws://${location.host}/ws`);
+        ws.onopen = () => log('WS connected');
+        ws.onmessage = (ev) => {
+          try { const j = JSON.parse(ev.data); if (j.event === 'match') { log(`Match: ${j.qty}@${j.price} ${j.buy_trader} vs ${j.sell_trader}`); } } catch(e){}
+        };
+      };
+    </script>
+  </body>
+</html>
