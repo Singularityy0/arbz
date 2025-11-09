@@ -220,31 +220,3 @@ Stream match and liquidation events.
 }
 ```
 
-## Suggested Postman Workflow
-1. Create environment & variables.
-2. Deposit for two traders.
-3. Place a buy order for alice and a sell order for bob.
-4. Open WS connection and wait for match event.
-5. Update oracle to force liquidation scenario if desired (lower price).
-6. Observe liquidation event.
-
-## Error Handling Notes
-- All endpoints currently return 200 with {"ok":false} on business failure (e.g., insufficient collateral). For production you’d want proper HTTP status codes.
-- On-chain failures (when enabled) simply keep orders in the book; you may not see a tx hash. Re-try logic can be added later.
-
-## Authentication / Security
-None implemented in demo. A real system would require wallet signature per order and authenticated deposit tracking.
-
-## Extending the Collection
-You can export these requests as a Postman Collection JSON. Recommended folder grouping:
-- Collateral: /deposit, /withdraw
-- Trading: /orders, /ws
-- Admin: /oracle, /fees, /status
-
-## Troubleshooting
-- No matches appearing: ensure at least one buy and one sell with overlapping price & positive qty.
-- Liquidations not firing: set oracle price far from entry (e.g., drop from 100 to 50) after position opens.
-- On-chain tx missing: verify env vars and that matcher started with `--features onchain`.
-
----
-Generated automatically. Update as endpoints evolve.
