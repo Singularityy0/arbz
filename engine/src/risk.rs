@@ -8,7 +8,6 @@ pub enum RiskError {
 }
 
 pub fn required_margin(qty: i128, price: i128, leverage: u32) -> i128 {
-    // initial margin = notional / leverage ; price in whole units for demo
     let notional = qty.abs() * price.abs();
     (notional as i128) / (leverage as i128).max(1)
 }

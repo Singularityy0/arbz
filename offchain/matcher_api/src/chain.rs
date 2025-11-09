@@ -1,5 +1,3 @@
-//! Chain interaction implementation (optional, behind `onchain` feature).
-//! Provides minimal calls: place_order, match, update_oracle, deposit.
 
 #[cfg(feature = "onchain")]
 use ethers::{ prelude::*, types::{I256, U256, Address} };
@@ -35,7 +33,7 @@ impl ChainClient {
             let rpc = std::env::var("ARBITRUM_RPC").ok();
             let pk = std::env::var("PRIVATE_KEY").ok();
             let addr = contract_address.clone();
-            let chain_id = std::env::var("CHAIN_ID").ok().and_then(|v| v.parse().ok()).unwrap_or(421614u64); // Arbitrum Sepolia default
+            let chain_id = std::env::var("CHAIN_ID").ok().and_then(|v| v.parse().ok()).unwrap_or(421614u64); 
             if let (Some(rpc), Some(pk), Some(ca)) = (rpc, pk, addr.clone(),) {
                 if let Ok(provider) = Provider::<Http>::try_from(rpc) {
                     if let Ok(wallet) = pk.parse::<LocalWallet>() {

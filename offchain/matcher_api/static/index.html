@@ -35,8 +35,45 @@
       </div>
     </div>
 
-    <h2>Matches</h2>
-    <div id="log"></div>
+    <h2>Account</h2>
+    <div class="row"><label>Trader </label><input id="acct_trader" value="Alice" /></div>
+    <div class="row"><label>Amount </label><input id="acct_amount" type="number" value="20000" /></div>
+    <div class="row">
+      <button id="deposit_btn">Deposit</button>
+      <button id="withdraw_btn" style="margin-left:8px;">Withdraw</button>
+    </div>
+
+    <h2>Live Stream</h2>
+    <div style="display:flex; gap:20px;">
+      <div style="flex:1;">
+        <div><strong>$singu Price:</strong> <span id="singu_price">-</span></div>
+        <div><strong>Last Match:</strong> <span id="last_match">None</span></div>
+        <div><strong>Last Liquidation:</strong> <span id="last_liq">None</span></div>
+      </div>
+      <div style="flex:2;">
+        <div id="log" aria-label="event-log"></div>
+      </div>
+    </div>
+
+    <h2>Positions & Health</h2>
+    <div>
+      <table id="state_table" border="1" cellspacing="0" cellpadding="6">
+        <thead>
+          <tr>
+            <th>Trader</th>
+            <th>Collateral</th>
+            <th>Locked</th>
+            <th>Qty</th>
+            <th>Entry</th>
+            <th>PnL</th>
+            <th>Health (bps)</th>
+            <th>Nonce</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div style="margin-top:8px;">Mark: <span id="mark_view">-</span></div>
+    </div>
 
     <script>
       const log = (m) => { const el = document.getElementById('log'); el.innerText += `\n${m}`; el.scrollTop = el.scrollHeight; };
@@ -56,13 +93,77 @@
         log('Order placed id=' + json.id);
       };
 
-      document.getElementById('simulate_liq').onclick = () => {
+      function connectStream() {
         const ws = new WebSocket(`ws://${location.host}/ws`);
         ws.onopen = () => log('WS connected');
         ws.onmessage = (ev) => {
-          try { const j = JSON.parse(ev.data); if (j.event === 'match') { log(`Match: ${j.qty}@${j.price} ${j.buy_trader} vs ${j.sell_trader}`); } } catch(e){}
+          try {
+            const j = JSON.parse(ev.data);
+            if (j.event === 'oracle') {
+              document.getElementById('singu_price').innerText = j.price;
+              log(`Oracle tick $singu=${j.price}`);
+            } else if (j.event === 'match') {
+              document.getElementById('last_match').innerText = `${j.qty}@${j.price} ${j.buy_trader} vs ${j.sell_trader}`;
+              log(`Match: ${j.qty}@${j.price} ${j.buy_trader} vs ${j.sell_trader}`);
+            } else if (j.event === 'liquidation') {
+              document.getElementById('last_liq').innerText = `${j.trader} at ${j.mark}`;
+              log(`Liquidation: trader=${j.trader} mark=${j.mark}`);
+            }
+          } catch(e) { /* ignore parse errors */ }
         };
+        ws.onclose = () => { log('WS disconnected, retrying in 2s'); setTimeout(connectStream, 2000); };
+      }
+      connectStream();
+
+        // Oracle price update (mock)
+      document.getElementById('simulate_liq').onclick = async () => {
+        const newMark = Number(document.getElementById('mark').value);
+        await fetch('/oracle', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ price: newMark }) });
+        log('Oracle update requested');
       };
+
+      // Deposit / Withdraw actions
+      document.getElementById('deposit_btn').onclick = async () => {
+        const trader = document.getElementById('acct_trader').value;
+        const amount = Number(document.getElementById('acct_amount').value);
+        const res = await fetch('/deposit', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ trader, amount }) });
+        const j = await res.json();
+        log(`Deposit ${amount} for ${trader}: ${JSON.stringify(j)}`);
+        if (typeof refreshState === 'function') refreshState();
+      };
+
+      document.getElementById('withdraw_btn').onclick = async () => {
+        const trader = document.getElementById('acct_trader').value;
+        const amount = Number(document.getElementById('acct_amount').value);
+        const res = await fetch('/withdraw', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ trader, amount }) });
+        const j = await res.json();
+        log(`Withdraw ${amount} for ${trader}: ${JSON.stringify(j)}`);
+        if (typeof refreshState === 'function') refreshState();
+      };
+
+      async function refreshState() {
+        try {
+          const res = await fetch('/state');
+          const j = await res.json();
+          document.getElementById('mark_view').innerText = j.mark;
+          const tbody = document.querySelector('#state_table tbody');
+          tbody.innerHTML = '';
+          for (const t of j.traders) {
+            const tr = document.createElement('tr');
+            const cells = [t.trader, t.collateral, t.locked_margin, t.qty, t.entry_price, t.pnl, t.health_bps, t.nonce];
+            for (const c of cells) {
+              const td = document.createElement('td');
+              td.textContent = String(c);
+              tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+          }
+        } catch (e) {
+          
+        }
+      }
+      setInterval(refreshState, 1500);
+      refreshState();
     </script>
   </body>
 </html>

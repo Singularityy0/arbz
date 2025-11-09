@@ -14,8 +14,11 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tower-http = { version = "0.5", features = ["fs"] }
 anyhow = "1"
-ethers = { version = "2.0.14", optional = true, default-features = false, features = ["abigen","rustls"] }
+ethers = { version = "2.0.14", optional = true, default-features = false, features = ["abigen","rustls","eip712"] }
 hex = { version = "0.4", optional = true }
+clap = { version = "4", features = ["derive"], optional = true }
+reqwest = { version = "0.12", default-features = false, features = ["json","rustls-tls"], optional = true }
 
 [features]
 onchain = ["ethers", "hex"]
+signing = ["ethers", "hex", "clap", "reqwest"]

@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run matcher_api (signing)",
+			"type": "shell",
+			"command": "cargo run -p matcher_api --features signing",
+			"isBackground": false,
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build"
+		}
+	]
+}

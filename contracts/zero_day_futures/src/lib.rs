@@ -1,6 +1,3 @@
-//! Minimal demo Stylus contract for Zero Day Futures Platform.
-//! Focus: collateral vault, order storage, simple matching, settlement & liquidation stubs.
-
 #![no_std]
 extern crate alloc;
 use alloc::{string::String, vec::Vec, collections::BTreeMap};
@@ -41,20 +38,16 @@ pub struct OrderData { pub trader: Address, pub side: Side, pub price: i128, pub
 pub struct ZeroDayFutures {
     owner: Address,
     paused: StorageBool,
-    // persistent counter for order ids
     next_order_id: StorageU64,
     collateral: StorageMap<Address, StorageU128>,
     locked_margin: StorageMap<Address, StorageU128>,
-    orders: StorageMap<u64, OrderSlot>,
-    // simplistic positions: net qty & avg entry price per trader
     position_qty: StorageMap<Address, i128>,
     position_entry: StorageMap<Address, i128>,
     position_margin: StorageMap<Address, StorageU128>,
-    // oracle stub: product id => price (whole units) and timestamp
     oracle_price: StorageMap<u64, i128>,
     oracle_ts: StorageMap<u64, u64>,
     default_expiry_secs: StorageU128,
-    liquidation_threshold_bps: StorageU128, // e.g. 5000 = 50%
+    liquidation_threshold_bps: StorageU128, 
     maker_fee_bps: StorageU128,
     taker_fee_bps: StorageU128,
     accrued_fees: StorageU128,
@@ -95,7 +88,6 @@ impl ZeroDayFutures {
         let locked = self.locked_margin.get(&sender).unwrap_or_default();
         if bal < amount + locked { return Err(ContractError::InsufficientCollateral); }
         self.collateral.insert(sender, bal - amount);
-        // transfer native token back (Stylus helper) - pseudo, actual transfer via msg::send
         stylus_sdk::msg::send(sender, amount);
         WithdrawEvent { trader: sender, amount }.emit();
         Ok(())
@@ -106,7 +98,6 @@ impl ZeroDayFutures {
         let trader = stylus_sdk::msg::sender();
         let now = stylus_sdk::block::timestamp();
         let expiry = now + self.default_expiry_secs.get();
-        // margin requirement (simplified) price scaled 1e8 assumed
         let margin = required_margin(qty, price, leverage) as u128;
         let free = self.collateral.get(&trader).unwrap_or_default() - self.locked_margin.get(&trader).unwrap_or_default();
         if free < margin { return Err(ContractError::InsufficientCollateral); }
@@ -175,7 +166,6 @@ impl ZeroDayFutures {
         let pnl = (mark_price - entry) * qty;
         let equity = coll + pnl - locked;
         if equity <= 0 { return 0; }
-        // return basis points equity/locked
         ((equity * 10_000) / locked) as u128
     }
 
@@ -195,7 +185,7 @@ impl ZeroDayFutures {
     pub fn withdraw_fees(&mut self, to: Address, amount: u128) -> Result<(), ContractError> { self.ensure_owner()?; let acc = self.accrued_fees.get(); let a = if amount>acc {acc} else {amount}; self.accrued_fees.set(acc - a); stylus_sdk::msg::send(to, a); FeesWithdrawn{ to, amount:a }.emit(); Ok(()) }
 
     pub fn update_oracle_price(&mut self, product_id: u64, price: i128) -> Result<(), ContractError> {
-        self.ensure_owner()?; // access control
+        self.ensure_owner()?; 
         let now = stylus_sdk::block::timestamp();
         self.oracle_price.insert(product_id, price);
         self.oracle_ts.insert(product_id, now);

@@ -1,3 +1,7 @@
+# Arbz Zero-Day Futures (MVP)
+
+This is a minimal prototype combining an off-chain Rust matching engine and an Arbitrum Stylus smart contract skeleton for a single synthetic futures instrument ($singu).
+For a comprehensive deep-dive (architecture, rationale, finance concepts, decentralization roadmap, algorithms, and future plans) see `final.md`.
 # Zero Day Futures Demo (Arbitrum Stylus + Rust)
 
 This workspace contains a minimal, runnable demo that covers core flows:
