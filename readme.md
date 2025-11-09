@@ -1,4 +1,4 @@
-# Zs
+# Singularity ($singu)
 
 ## Overview
 Singularity is a minimal, end-to-end prototype of intraday futures exchange. 
@@ -54,11 +54,12 @@ Current State: Centralized off-chain engine with client-verifiable signatures (E
 - Full on-chain margin & trade settlement using Stylus contract logic.
 - Dispute mechanism for off-chain batches (fraud proofs, validity proofs).
 
+## 7. How to run!
 
 Prerequisites: Rust toolchain (stable), optionally Arbitrum Stylus environment for contract experiments.
-
+```cargo build -p matcher_api --features signing```
 ```
-
+cargo run -p matcher_api --features signing --bin matcher_api
 ```
 
 In another terminal, place a plain order:
