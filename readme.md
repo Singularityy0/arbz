@@ -1,7 +1,7 @@
-# Arbz 
+# Zs
 
 ## Overview
-Arbz is a minimal, end-to-end prototype of intraday futures exchange. 
+Singularity is a minimal, end-to-end prototype of intraday futures exchange. 
 This is a minimal prototype combining an off-chain Rust matching engine and an Arbitrum Stylus smart contract skeleton for a single synthetic futures instrument ($singu).
 
 

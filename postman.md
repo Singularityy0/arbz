@@ -1,4 +1,4 @@
-# Postman Collection Guide for arbz Demo
+# Postman Collection Guide 
 
 This document lists all available HTTP endpoints and the WebSocket flow for the `matcher_api` service so you can easily recreate them in Postman. It includes example requests and typical responses. Adjust host/port if you changed defaults.
 
@@ -7,8 +7,8 @@ Base URL:
 http://localhost:8787
 ```
 
-## Environment Setup (Postman Environment Variables)
-Create a Postman environment named `arbz-local` with variables:
+## Environment Setup
+Create a Postman environment  with variables:
 - `base_url` = `http://localhost:8787`
 - `trader_alice` = `alice`
 - `trader_bob` = `bob`
