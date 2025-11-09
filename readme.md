@@ -28,13 +28,12 @@ Signature recovery off-chain → On-chain verification on each consumed order.
 Liquidation in WebSocket loop → Explicit liquidate function callable by anyone.
 Fee deduction logic → Fee computation + transfer/booking in contract.
 Health calculation function → Pure/view function in contract.
-But I had trouble deploying the contract , just using 
+But I had trouble deploying the contract, I tried countless time from scractch but everytime i had some different error while using ``cargo stylus check`` which meant contract is not deployable
 ## 5. Planned On-Chain Evolution
-Phased migration roadmap:
-2. Margin & Collateral Escrow: Move deposit/withdraw and locked margin enforcement on-chain; off-chain engine only proposes matches referencing on-chain balances.
-3. Order Authentication: Signed orders posted on-chain (or sequenced in a rollup inbox) enabling trust-minimized off-chain match proofs.
-4. Oracle Integration: Replace synthetic random walk with decentralized price feed (Chainlink or custom aggregator) anchored on-chain.
-5. Fraud Proofs / Challenge Window: Introduce a mechanism to dispute incorrect off-chain matches before settlement finalization.
+- Margin & Collateral Escrow: Move deposit/withdraw and locked margin enforcement on-chain; off-chain engine only proposes matches referencing on-chain balances.
+- Order Authentication: Signed orders posted on-chain (or sequenced in a rollup inbox) enabling trust-minimized off-chain match proofs.
+- Oracle Integration: Replace synthetic random walk with decentralized price feed (Chainlink or custom aggregator) anchored on-chain.
+- Introduce a mechanism to dispute incorrect off-chain matches before settlement finalization.
 ## 6. Trading & Finance Variables 
 - Price: Current oracle mark (`mark`); drives unrealized PnL.
 - Notional: `abs(price) * abs(qty)` — gross exposure.
