@@ -16,7 +16,7 @@ Create a Postman environment named `arbz-local` with variables:
 - `qty` = `1`
 - `leverage` = `1`
 
-(Optionally when on-chain integration is enabled)
+(Optional when on-chain integration is enabled)
 - `contract_address` = `<0x...>`
 - `onchain_active` = `true` or `false`
 
@@ -55,7 +55,7 @@ Withdraw collateral (succeeds only if free collateral >= amount).
 ```
 (or `{"ok":false}` if insufficient free collateral)
 
-## 3. Place Order
+## 3. Place Plain Order
 Place a buy or sell order.
 - Method: POST
 - URL: `{{base_url}}/orders`
@@ -81,7 +81,34 @@ Place a buy or sell order.
 ```
 `id` is the order id (on-chain if active). `tx` present only when on-chain placement succeeded.
 
-## 4. Update Oracle Price
+## 4. Place Signed Order (EIP-712)
+Requires server started with `--features signing` and using the signer CLI to produce a JSON payload.
+
+- Method: POST
+- URL: `{{base_url}}/orders/signed`
+- Body (example):
+```json
+{
+  "order": {
+    "trader": "0x8ba1f109551bD432803012645Ac136ddd64DBA72",
+    "side": "buy",
+    "price": 101,
+    "qty": 500,
+    "leverage": 10,
+    "ttl_secs": 600,
+    "is_limit": true,
+    "nonce": 0
+  },
+  "signature": "0x...65bytes..."
+}
+```
+- Success Response mirrors plain order: `{ "id": <order_id>, "tx": null }`
+- Error responses:
+  - Bad nonce: `{ "error": "bad nonce", "expected": <n> }`
+  - Signature mismatch: HTTP 401 `{ "error": "signature mismatch" }`
+  - Encoding failures: `{ "error": "encode failed" }`
+
+## 5. Update Oracle Price
 Set the mark price used for PnL & liquidation (demo single product).
 - Method: POST
 - URL: `{{base_url}}/oracle`
@@ -97,7 +124,7 @@ Set the mark price used for PnL & liquidation (demo single product).
 ```
 (On-chain active: triggers a transaction; no tx hash returned directly, WS may show later.)
 
-## 5. Update Fee Configuration
+## 6. Update Fee Configuration
 Set maker/taker basis points.
 - Method: POST
 - URL: `{{base_url}}/fees`
@@ -113,7 +140,7 @@ Set maker/taker basis points.
 {"ok":true}
 ```
 
-## 6. Status
+## 7. Status
 Check if on-chain feature is compiled and active.
 - Method: GET
 - URL: `{{base_url}}/status`
@@ -126,7 +153,32 @@ Check if on-chain feature is compiled and active.
 {"onchain_feature":true,"active":true,"contract_address":"0x..."}
 ```
 
-## 7. WebSocket Match Stream
+## 8. Get State Snapshot
+Aggregated risk + mark price.
+- Method: GET
+- URL: `{{base_url}}/state`
+- Sample response:
+```json
+{
+  "mark": 102,
+  "traders": [
+    {
+      "trader": "alice",
+      "collateral": 99975,
+      "locked_margin": 5050,
+      "qty": 500,
+      "entry_price": 100,
+      "pnl": 1000,
+      "health_bps": 190000,
+      "nonce": 1
+    }
+  ]
+}
+```
+
+Field meanings: see `final.md` (PnL, health, nonce).
+
+## 9. WebSocket Match / Oracle / Liquidation Stream
 Stream match and liquidation events.
 - URL: `ws://localhost:8787/ws`
 - In Postman: New tab -> WebSocket -> enter URL -> Connect.
